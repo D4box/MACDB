@@ -1,0 +1,197 @@
+<head>
+    <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+    <style>
+        body{
+            box-sizing: border-box;
+            margin: 0px;
+            background-color: #eeeeee;
+        }
+        .tag {
+            margin-bottom: 0px;
+            transform: scale(1.1);
+        }
+        .tagname {
+            padding-bottom: 20px;
+        }
+        .tagli {
+            list-style-type: none;
+            margin-bottom: 3px;
+        }
+        div#result {
+            padding: 20px;
+        }
+        .root {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .topbar {
+            min-height: 60px;
+            background-color: #ffffff;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .botton {
+            display: flex;
+            flex-grow: 1;
+        }
+        .sidebar {
+            width: 150px;
+            background-color: #ffffff;
+            padding: 20px;
+            float: left;
+        }
+        #search-bar {
+            display: flex;
+            margin-left:auto;
+            margin-right:auto;
+        }
+        #tag-search {
+            width: 1000px;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 20px;
+            border: 3px solid #ccc;
+            outline: none;
+            box-shadow: none;
+        }
+        #tag-search:hover {
+            border-color: #aaa;
+        }
+        #tag-search:active {
+            background-color: #eeeeee;
+        }
+        #tag-search-button {
+            width: 100px;
+            border-radius: 20px;
+            border: 3px solid #ccc;
+            outline: none;
+            box-shadow: none;
+        }
+        #tag-search-button:hover {
+            background-color: #ccc;
+        }
+        #tag-search-button:active {
+            background-color: #aaa;
+        }
+        .tag {
+            margin-bottom: 0px;
+            transform: scale(1.1);
+        }
+        .tagname {
+            padding-bottom: 20px;
+        }
+        .tagli {
+            list-style-type: none;
+            margin-bottom: 3px;
+        }
+        div#result {
+            padding: 20px;
+            display: flow-root;
+        }
+    </style>
+    <script>
+        window.onload = async function () {
+            let taglistdiv = document.querySelector('.sidebar');
+            try {
+                await fetch('http://127.0.0.1:8000/gettaglist/').then(response => response.json()).then(data => {
+                let tagnamelist = Object.entries(data);
+                tagnamelist.forEach(tag => {
+                    let tagname = document.createElement('div');
+                    tagname.className = 'tagname';
+                    tagname.innerHTML = `<a style="font-size: 20PX;font-weight: 800;padding-bottom: 10px;display: flex;">${tag[0]}</a>`;
+                    let taglistdiv = document.querySelector('.sidebar');
+                    taglistdiv.appendChild(tagname);
+                    let taglist = tag[1];
+                    taglist.forEach(tag => {
+                        let tagli = document.createElement('li');
+                        tagli.className = 'tagli';
+                        tagli.innerHTML = `<input type="checkbox" class="tag" value="${tag}" onClick=get_c()><label style="padding-left: 3px;">${tag}</label>`;
+                        tagname.appendChild(tagli);
+                    })
+                })
+            });
+            }
+            catch (err) {
+                taglistdiv.innerHTML = '无法连接到服务器';};
+        }
+        async function bingji(a,b) {
+            return $.unique((await a).concat(await b))
+        }
+        async function jiaoji(a,b) {
+            return $(await a).filter(await b).toArray()
+        }
+        // todo:分离get_c为一个单独的搜索程序和一个检测勾选状态的程序
+        //      搜索框接入分离后的搜索程序
+        //      搜索框和复选框同步状态
+        async function get_c() {
+            let output = ["empty"]
+            let typelist = document.querySelectorAll('.tagname');
+            typelist.forEach(typename => {
+                let counttag = 0;
+                let typeout = []
+                let taglist = typename.querySelectorAll('.tag');
+                taglist.forEach(tag => {
+                    if (tag.checked) {
+                        counttag += 1;
+                        let tagnamelist = get_taglist(tag.value);
+                        typeout = bingji(typeout, tagnamelist);
+                    }
+                });
+                if (counttag > 0){if (output == "empty"){output = typeout} else {output = jiaoji(output, typeout)};}
+            })
+            result.innerHTML = '';
+            let taglistres = await output;
+            let countresult = document.createElement('div');
+            if (taglistres == 'empty') {
+                countresult.innerHTML = '未找到结果 >_<';
+                result.appendChild(countresult);
+            } else {
+                countresult.innerHTML = `共找到${taglistres.length}个结果<p>`;
+                result.appendChild(countresult);
+                taglistres.forEach(tag => {
+                    let tagdiv = document.createElement('div');
+                    tagdiv.innerHTML = tag;
+                    result.appendChild(tagdiv);
+                })
+            }
+        }
+        async function get_taglist(tag) {
+            const response = await fetch(`http://127.0.0.1:8000/gettags/${tag}`);
+            const list = await response.json();
+            return list;
+        };
+    </script>
+</head>
+<body>
+    <div class="root">
+        <div class="topbar">
+            <a style="margin-left: 10px;font-weight: 900;font-size: 40px;">MACDB</a>
+            <div id="search-bar">
+                <input id="tag-search" type="text" placeholder="请输入关键词">
+                <button id="tag-search-button">搜索</button>
+            </div>
+        </div>
+        <div class="botton">
+            <div class="sidebar"></div>
+            <div id="result"></div>
+        </div>
+    </div>
+    <script>
+        let result = document.querySelector('#result');
+        let input = document.getElementById('tag-search');
+        let searchbutton = document.getElementById('tag-search-button');
+        searchbutton.addEventListener('click', () => {
+            let value = input.value;
+            get_taglist(value).then(response => response.json()).then(data => {
+                result.innerHTML = '';
+                data.forEach(item => {
+                    let div = document.createElement('div');
+                    div.innerHTML = item;
+                    result.appendChild(div);
+                });
+            });
+        });
+    </script>
+</body>
