@@ -1,4 +1,4 @@
-# MACDB(暂名)
+# (未完工)MACDB(暂名)
 
 模仿[ACDB](https://www.animecharactersdatabase.com)制作的动漫人物搜索网站，因为ACDB基本上没有收录多少中文圈的动漫角色，因此诞生了MACDB(暂名)，数据来自[Moegirl萌娘百科](https://moegirl.org)
 
