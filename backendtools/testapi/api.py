@@ -4,6 +4,10 @@ import json
 
 app = FastAPI()
 
+header = {"Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Cache-Control":"max-age=86400"}
+
 def tagtolist(tag):
     taglist = []
     try:
@@ -16,16 +20,10 @@ def tagtolist(tag):
 
 @app.get("/gettags/{tag}")
 def read_root(tag: str):
-    header = {"Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              "Cache-Control":"max-age=86400"}
     return JSONResponse(content=tagtolist(tag), headers=header)
 
 @app.get("/gettaglist/")
 def read_root():
-    header = {"Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-              "Cache-Control":"max-age=86400"}
     with open("./taglist.json", "r", encoding='utf-8') as file:
         files = json.load(file)
     return JSONResponse(content=files, headers=header)
