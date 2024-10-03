@@ -1,6 +1,8 @@
 <head>
+    <meta name="referrer" content="no-referrer" />
     <title>MACDB</title>
     <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         body{
             box-sizing: border-box;
@@ -30,10 +32,17 @@
             list-style-type: none;
             margin-bottom: 3px;
         }
-        div#result {
+        #result {
+            padding: 50px;
+            display: flex;
+            flex-direction: row;
+            width: 200px;
+            flex: 1;
+        }
+        #reslipic {
             padding: 20px;
-            display: flow-root;
-            width: 200px
+            position: fixed;
+            left: 450px
         }
         .root {
             display: flex;
@@ -53,10 +62,10 @@
             box-shadow: 0px 0px 5px 0px #00000040;
         }
         .botton {
-            position: absolute;
+            position: relative;
             top: 70px;
             display: flex;
-            flex-grow: 1;
+            min-height: calc(100vh - 70px);
         }
         .sidebar {
             width: 160px;
@@ -68,7 +77,14 @@
         .resli{
             list-style-type: none;
             padding: 4px;
-
+            width: 200px;
+            transition: all .4s ;
+        }
+        .resli:hover{
+            position: relative;
+            z-index: 998;
+            box-shadow: 0px 0px 10px 0px #11111140;
+            transition: all .4s ;
         }
         .resli:nth-child(even){
             background-color: #e8e8e8;
@@ -125,7 +141,6 @@
             background: #f5f5f5;
             display: flex;
             align-items: center;
-            justify-content: center;
             transition: all .3s;
         }
         .nbutton:hover {
@@ -138,7 +153,7 @@
             transition: all .3s;
         }
         .tswitch {
-            width: 116px;
+            width: 124px;
             height: 36px;
             outline: none;
             margin: 10px;
@@ -149,6 +164,7 @@
             display: flex;
             align-items: center;
             transition: all .4s;
+            user-select: none;
         }
         .tswitch:hover .tswitch-button {
             background-color: #fcfcfc;
@@ -161,7 +177,7 @@
         }
         .tswitch-button {
             position: relative;
-            width: 80px;
+            width: 88px;
             height: 36px;
             outline: none;
             box-sizing: border-box;
@@ -170,7 +186,12 @@
             background: #F5f5f5;
             display: flex;
             align-items: center;
-            transition: all .3s;
+            transition: all .4s;
+        }
+        .tswitch-show {
+            padding: 7px;
+            display: flex;
+            align-items: center;
         }
         #srandon:checked + .tswitch .tswitch-button {
             transform: translateX(35px);
@@ -179,12 +200,23 @@
             font-size: 23PX;
             font-weight: 800;
             display: flex;
+            user-select: none;
         }
         .tagdisplay {
             display: block;
             padding-top: 10px;
             Overflow: hidden;
             animation-direction: alternate;
+        }
+        @keyframes hide {  
+            0% {opacity: 1}
+            50% {opacity: 0}
+            100% {opacity: 0}
+        }
+        @keyframes show {
+            0% {opacity: 0}  
+            50% {opacity: 0}
+            100% {opacity: 1}
         }
         @keyframes tagdisplayhide {  
             from {padding-top:10px;max-height: 1000px; opacity: 1;display: block;}
@@ -207,34 +239,39 @@
     </style>
     <script>
         window.onload = async function () {     //Tag列表加载
+            startseed = Math.random();
+            errorresult = [];
+            console.log(`随机种：${startseed}`);
             var result = document.querySelector('#result');
             let taglistdiv = document.querySelector('.sidebar');
             try {
                 await fetch('http://127.0.0.1:8000/gettaglist/').then(response => response.json()).then(data => {
-                let tagnamelist = Object.entries(data);
-                tagnamelist.forEach(tagcaname => {
-                    let tagnamelable = document.createElement('label');
-                    tagnamelable.innerHTML = '<input type="checkbox" class="noshow">';
-                    let tagname = document.createElement('div');
-                    tagname.className = 'tagname';
-                    tagname.innerHTML = `<a onClick=show_taglist() class="tagclicktitle">${tagcaname[0]}</a>`;
-                    let tagdisplay = document.createElement('div');
-                    tagdisplay.className = 'tagdisplay';
-                    tagdisplay.style.animation = 'tagdisplayhide 1s forwards';
-                    tagdisplay.setAttribute('data-ishide',"true");
-                    let taglistdiv = document.querySelector('.sidebar');
-                    tagname.appendChild(tagdisplay);
-                    tagnamelable.appendChild(tagname);
-                    taglistdiv.appendChild(tagnamelable);
-                    let taglist = tagcaname[1];
-                    taglist.forEach(tag => {
-                        let tagli = document.createElement('li');
-                        tagli.className = 'tagli';
-                        tagli.innerHTML = `<input type="checkbox" class="tagclick" id="${tag}" onClick=get_ctr()><a class="tagclickname" href="https://mzh.moegirl.org.cn/${tag}" target="_blank">${tag}</a>`;
-                        tagdisplay.appendChild(tagli);
+                    let typenamelist = Object.entries(data);
+                    tagnamelist = []
+                    typenamelist.forEach(tagcaname => {
+                        let tagnamelable = document.createElement('label');
+                        tagnamelable.innerHTML = '<input type="checkbox" class="noshow">';
+                        let tagname = document.createElement('div');
+                        tagname.className = 'tagname';
+                        tagname.innerHTML = `<a onClick=show_taglist() class="tagclicktitle">${tagcaname[0]}</a>`;
+                        let tagdisplay = document.createElement('div');
+                        tagdisplay.className = 'tagdisplay';
+                        tagdisplay.style.animation = 'tagdisplayhide 1s forwards';
+                        tagdisplay.setAttribute('data-ishide',"true");
+                        let taglistdiv = document.querySelector('.sidebar');
+                        tagname.appendChild(tagdisplay);
+                        tagnamelable.appendChild(tagname);
+                        taglistdiv.appendChild(tagnamelable);
+                        let taglist = tagcaname[1];
+                        taglist.forEach(tag => {
+                            tagnamelist.push(tag);
+                            let tagli = document.createElement('li');
+                            tagli.className = 'tagli';
+                            tagli.innerHTML = `<input type="checkbox" class="tagclick" id="${tag}" onClick=get_ctr()><a class="tagclickname" href='https://mzh.moegirl.org.cn/${tag}' target="_blank">${tag}</a>`;
+                            tagdisplay.appendChild(tagli);
+                        })
                     })
-                })
-            });
+                });
             }
             catch (err) {
                 result.innerHTML = '无法连接到服务器';};
@@ -245,41 +282,81 @@
         async function jiaoji(a,b) {
             return $(await a).filter(await b).toArray()
         }
-        async function showresli(data) {     //结果列表加载模式
+        async function showresli(data) {                    // 结果列表加载模式
             data = await data;
-            data = Array.from(new Set(data));//查重
-            data = data.sort(
-                function compareFunction(a, b) {
-                    return a.localeCompare(b,"zh");
-                }
-            ); //查重并排序
+            data = Array.from(new Set(data));               // 查重
+            if (document.getElementById('srandon').checked) {
+                data = data.sort(
+                    function compareFunction(a, b) {
+                        return a.localeCompare(b,"zh");
+                    }
+                );                                          // 按首字母排序
+            } else {
+                data = sortWithSeed(data,startseed);        // 随机排序
+            }
             result.innerHTML = '';
-            if(data.length == 0 | data == "empty"){
+            if (errorresult.length != 0) {                  // 错误输出
+                let countresult = document.createElement('div');
+                countresult.innerHTML = errorresult;
+                result.appendChild(countresult);
+            }else if(data.length == 0 | data == "empty"){   // 无结果输出
                 let countresult = document.createElement('div');
                 countresult.innerHTML = '未找到结果 >_<';
                 result.appendChild(countresult);
             }
-            else if (data.includes("没有")) {
-                let countresult = document.createElement('div');
-                countresult.innerHTML = data;
-                result.appendChild(countresult);
-            } else {
+            else {
+                let reslist = document.createElement('div');
                 let countresult = document.createElement('div');
                 countresult.innerHTML = `共找到${data.length}个结果<p>`;
-                result.appendChild(countresult);
+                reslist.appendChild(countresult);
                 data.forEach(item => {
                     let li = document.createElement('li');
                     li.className = "resli";
-                    let resnameurl = "https://mzh.moegirl.org.cn/" + item;
+                    li.onclick = function() {show_resli_pic(item)};
+                    let resnameurl = "https://mzh.moegirl.org.cn/" + item;    // 有问题 NULL(Baldi's Basics)
                     li.innerHTML = `<a class="resname" href=${resnameurl} target="_blank">${item}</a>`;
-                    result.appendChild(li);
+                    reslist.appendChild(li);
                 });
+                result.appendChild(reslist);
+                let reslipic = document.createElement('div');
+                reslipic.id = "reslipic";
+                result.appendChild(reslipic);
+                show_resli_pic(reslist.children[1].textContent);
             }
+            errorresult = []; // 清空错误结果
+        }
+        async function get_detail(str) {
+            detail = await fetch(`https://mzh.moegirl.org.cn/api.php?origin=*&action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=480&pilicense=any&titles=${str}`,{method: 'GET',mode: 'cors'}).then(response => response.json())
+            detail = detail.query.pages;
+            return Object.values(detail)[0].thumbnail.source
+        }
+        async function show_resli_pic(str) {                    // 列表模式图片
+            let reslipic = document.getElementById('reslipic');
+            reslipic.innerHTML = '';
+            let pic = document.createElement('img');
+            pic.src = await get_detail(str);
+            reslipic.appendChild(pic);
+        }
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+        function sortWithSeed(array, seed) {
+            return array.sort((a, b) => {
+                seed++;
+                return seededRandom(seed) - 0.5;
+            });
         }
         async function get_taglist(tag) {
-            const response = await fetch(`http://127.0.0.1:8000/gettags/${tag}`);
-            const list = await response.json();
-            return list;
+            if (tagnamelist.includes(tag)) {
+                const response = await fetch(`http://127.0.0.1:8000/gettags/${tag}`);
+                const list = await response.json();
+                return list;
+            } else if (tag == '') {
+                return [];
+            } else {
+                errorresult.push(`没有Tag:${tag}`);
+            }
         };
         function show_taglist() {       //折叠展开标签,首次尝试CSS动画
             let clicktag = event.currentTarget;
@@ -290,6 +367,15 @@
             } else {
                 taglistdiv.setAttribute("data-ishide", "true");
                 taglistdiv.style.animation = 'tagdisplayhide 0.5s forwards alternate';
+            }
+        }
+        async function tswitch_change() {       //开关动画
+            if (document.getElementById('srandon').checked) {
+                document.getElementById('tbs').style.animation = 'hide 0.4s forwards';
+                document.getElementById('tbr').style.animation = 'show 0.4s forwards';
+            } else {
+                document.getElementById('tbr').style.animation = 'hide 0.4s forwards';
+                document.getElementById('tbs').style.animation = 'show 0.4s forwards';
             }
         }
         async function get_ctr() {        //新版 勾选输出公式
@@ -312,7 +398,7 @@
             search_tag(output);
         }
         async function search_tag(stext) {      //新版 公式搜索
-            let output = ["empty"]
+            output = ["empty"]
             stext.split("&").forEach(listtext => {
                 let typeout = []
                 listtext.split("|").forEach(tagtext => {
@@ -332,7 +418,7 @@
                 document.getElementById('tsinput').value = stext;
                 stext.split("&").forEach(listtext => {
                     listtext.split("|").forEach(tagtext => {
-                        document.getElementById(tagtext).checked = true;
+                        if (tagnamelist.includes(tagtext)) {document.getElementById(tagtext).checked = true;}
                     });
                 });
             }
@@ -347,7 +433,7 @@
         }
         function search_bar_search() {      //搜索框搜索
             let value = document.getElementById('tsinput').value;
-            showresli(search_tag(value));
+            search_tag(value);
         }
     </script>
 </head>
@@ -357,24 +443,31 @@
             <a style="margin-left: 5px;font-weight: 900;font-size: 33px;">MACDB</a>
             <div id="search-bar">
                 <button class="nbutton" type="button" onClick="reset_click()">
-                    <svg width="17" style="color: rgb(96, 96, 96);margin-right: 5px;" height="17" viewBox="0 0 22.0037 20" fill="none">
-                        <path id="Reset" d="M18 14C16.5 17 14 19 10 19C5.02 19 1 14.97 1 10C1 5.02 5.02 1 10 1C14.97 1 19 5.02 19 10M21 7L19 10L16 8" stroke="#09090B" stroke-opacity="1.000000" stroke-width="2.000000" stroke-linejoin="round" stroke-linecap="round"/>
-                    </svg>
-                    <a style="color: rgb(96, 96, 96);font-size: 17px;font-weight: 500;">重置</a>
+                    <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">refresh</span>
+                    <a style="color: #606060;font-size: 17px;font-weight: 500;">重置</a>
                 </button>
                 <label>
-                    <input type="checkbox" class="noshow" id="srandon">
-                    <div class="tswitch">
-                        <div class="tswitch-button"></div>
+                    <input type="checkbox" class="noshow" id="srandon" onClick="showresli(output)">
+                    <div class="tswitch" id="srandomdiv" onClick="tswitch_change()">
+                        <span class="material-icons" style="color: #606060;margin-left: 8px; position: absolute;">shuffle</span>
+                        <div class="tswitch-button">
+                            <div class="tswitch-show" id="tbr" style="position: absolute;">
+                                <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">shuffle</span>
+                                <a style="color: #606060;font-size: 17px;font-weight: 500;">随机</a>
+                            </div>
+                            <div class="tswitch-show" id="tbs" style="opacity: 0;position: absolute;">
+                                <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">sort</span>
+                                <a style="color: #606060;font-size: 17px;font-weight: 500;">顺序</a>
+                            </div>
+                        </div>
+                        <span class="material-icons" style="color: #606060;margin-left: 2px;">sort</span>
                     </div>
                 </label>
                 <label>
                     <div id="tag-search">
                         <input id="tsinput" type="text" placeholder="" onkeypress="if (event.keyCode == 13) {search_bar_search();}">
                         <button type="button" id="tag-search-button" onclick="search_bar_search()">
-                            <svg width="23" viewBox="0 0 21 22" fill="none">
-                                <path id="Vector" d="M11.45 13.87C10.3 14.58 8.95 15 7.5 15C3.35 15 0 11.64 0 7.5C0 3.35 3.35 0 7.5 0C11.64 0 15 3.35 15 7.5C15 9.46 14.24 11.25 13 12.59L18.7 18.29C19.09 18.68 19.09 19.31 18.7 19.7C18.31 20.09 17.68 20.09 17.29 19.7L11.45 13.87ZM13 7.5C13 10.53 10.53 13 7.5 13C4.46 13 2 10.53 2 7.5C2 4.46 4.46 2 7.5 2C10.53 2 13 4.46 13 7.5Z" fill="#606060" fill-opacity="1.000000" fill-rule="evenodd"/>
-                            </svg>
+                            <span class="material-icons" style="color: rgb(96, 96, 96);">search</span>
                         </button>
                     </div>
                 </label>
@@ -382,7 +475,9 @@
         </div>
         <div class="botton">
             <div class="sidebar"></div>
-            <div id="result"></div>
+            <div id="result">
+                
+            </div>
         </div>
     </div>
 </body>
