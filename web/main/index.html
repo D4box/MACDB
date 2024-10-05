@@ -1,13 +1,25 @@
 <head>
     <meta name="referrer" content="no-referrer" />
     <title>MACDB</title>
-    <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link
+        rel="stylesheet"
+        crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/misans@4.0.0/lib/Normal/MiSans-Medium.min.css"
+    />
+    <link
+        rel="stylesheet"
+        crossorigin="anonymous"
+        href="https://cdn.jsdelivr.net/npm/misans@4.0.0/lib/Normal/MiSans-Bold.min.css"
+    />
     <style>
         body{
+            /* font-family: MiSans; */
             box-sizing: border-box;
             margin: 0px;
             background-color: #f9f9f9;
+            overflow-y: scroll;
         }
         .tagclick {
             margin-bottom: 0px;
@@ -36,8 +48,8 @@
             padding: 50px;
             display: flex;
             flex-direction: row;
-            width: 200px;
             flex: 1;
+            width:auto;
         }
         #reslipic {
             padding: 20px;
@@ -47,7 +59,7 @@
         .root {
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
         }
         .topbar {
             width: 100vw;
@@ -68,11 +80,12 @@
             min-height: calc(100vh - 70px);
         }
         .sidebar {
+            min-height: calc(100% - 20px);
             width: 160px;
             background-color: #ffffff;
             padding: 10px;
-            float: left;
             box-shadow: 0px 0px 5px 0px #00000040;
+            flex-shrink: 0;
         }
         .resli{
             list-style-type: none;
@@ -197,8 +210,9 @@
             transform: translateX(35px);
         }
         .tagclicktitle {
+            font-family: MiSans;
             font-size: 23PX;
-            font-weight: 800;
+            font-weight: 200;
             display: flex;
             user-select: none;
         }
@@ -236,6 +250,20 @@
         .noshow {
             display: none;
         }
+        #welcome {
+            padding: 0 100 0;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+        }
+        #welcome-logo {
+            margin-right: 20px;
+            display: flex;
+            flex-direction: row;
+            height: fit-content;
+            align-items: center;
+        }
+
     </style>
     <script>
         window.onload = async function () {     //Tag列表加载
@@ -245,7 +273,8 @@
             var result = document.querySelector('#result');
             let taglistdiv = document.querySelector('.sidebar');
             try {
-                await fetch('http://127.0.0.1:8000/gettaglist/').then(response => response.json()).then(data => {
+                await fetch('/api/taglist.json').then(response => response.json()).then(data => {
+//                await fetch('http://127.0.0.1:8000/gettaglist/').then(response => response.json()).then(data => {
                     let typenamelist = Object.entries(data);
                     tagnamelist = []
                     typenamelist.forEach(tagcaname => {
@@ -330,12 +359,18 @@
             detail = detail.query.pages;
             return Object.values(detail)[0].thumbnail.source
         }
-        async function show_resli_pic(str) {                    // 列表模式图片
-            let reslipic = document.getElementById('reslipic');
-            reslipic.innerHTML = '';
-            let pic = document.createElement('img');
-            pic.src = await get_detail(str);
-            reslipic.appendChild(pic);
+        async function show_resli_pic(str) {      
+            let reslipic = document.getElementById('reslipic');   
+            reslipic.innerHTML = '';                           // 列表模式图片
+            try {
+                let pic = document.createElement('img');
+                detail = await fetch(`https://mzh.moegirl.org.cn/api.php?origin=*&action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=480&pilicense=any&titles=${str}`,{method: 'GET',mode: 'cors'}).then(response => response.json())
+                detail = detail.query.pages;
+                pic.src = await Object.values(detail)[0].thumbnail.source
+                reslipic.appendChild(pic);
+            } catch (error) {
+                reslipic.innerHTML = '找不到图片喵~';
+            }
         }
         function seededRandom(seed) {
             let x = Math.sin(seed) * 10000;
@@ -347,17 +382,29 @@
                 return seededRandom(seed) - 0.5;
             });
         }
-        async function get_taglist(tag) {
+        async function get_taglist(tag) {       //获得标签列表
             if (tagnamelist.includes(tag)) {
-                const response = await fetch(`http://127.0.0.1:8000/gettags/${tag}`);
-                const list = await response.json();
-                return list;
+                var response = await fetch(`/api/${tag}.txt`);
+                var list = await response.text();
+                list = list.split('\r\n');
+                return await list.slice(1,-1);
             } else if (tag == '') {
                 return [];
             } else {
                 errorresult.push(`没有Tag:${tag}`);
             }
         };
+//        async function get_taglist(tag) {       //本地调试标签列表
+//            if (tagnamelist.includes(tag)) {
+//                const response = await fetch(`http://127.0.0.1:8000/gettags/${tag}`);
+//                const list = await response.json();
+//                return list;
+//            } else if (tag == '') {
+//                return [];
+//            } else {
+//                errorresult.push(`没有Tag:${tag}`);
+//            }
+//        };
         function show_taglist() {       //折叠展开标签,首次尝试CSS动画
             let clicktag = event.currentTarget;
             let taglistdiv = clicktag.nextElementSibling;
@@ -437,46 +484,97 @@
         }
     </script>
 </head>
-<body>
-    <div class="root">
-        <div class="topbar">
-            <a style="margin-left: 5px;font-weight: 900;font-size: 33px;">MACDB</a>
-            <div id="search-bar">
-                <button class="nbutton" type="button" onClick="reset_click()">
-                    <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">refresh</span>
-                    <a style="color: #606060;font-size: 17px;font-weight: 500;">重置</a>
-                </button>
-                <label>
-                    <input type="checkbox" class="noshow" id="srandon" onClick="showresli(output)">
-                    <div class="tswitch" id="srandomdiv" onClick="tswitch_change()">
-                        <span class="material-icons" style="color: #606060;margin-left: 8px; position: absolute;">shuffle</span>
-                        <div class="tswitch-button">
-                            <div class="tswitch-show" id="tbr" style="position: absolute;">
-                                <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">shuffle</span>
-                                <a style="color: #606060;font-size: 17px;font-weight: 500;">随机</a>
-                            </div>
-                            <div class="tswitch-show" id="tbs" style="opacity: 0;position: absolute;">
-                                <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">sort</span>
-                                <a style="color: #606060;font-size: 17px;font-weight: 500;">顺序</a>
-                            </div>
+<body class="root">
+    <div class="topbar">
+        <a style="font-family: MiSans; color:#25B449 ;margin-left: 5px;font-weight: 900;font-size: 33px;">MACDB</a>
+        <div id="search-bar">
+            <button class="nbutton" type="button" onClick="reset_click()">
+                <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">refresh</span>
+                <a style="color: #606060;font-size: 17px;font-weight: 500;">重置</a>
+            </button>
+            <label>
+                <input type="checkbox" class="noshow" id="srandon" onClick="showresli(output)">
+                <div class="tswitch" id="srandomdiv" onClick="tswitch_change()">
+                    <span class="material-icons" style="color: #606060;margin-left: 8px; position: absolute;">shuffle</span>
+                    <div class="tswitch-button">
+                        <div class="tswitch-show" id="tbr" style="position: absolute;">
+                            <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">shuffle</span>
+                            <a style="color: #606060;font-size: 17px;font-weight: 500;">随机</a>
                         </div>
-                        <span class="material-icons" style="color: #606060;margin-left: 2px;">sort</span>
+                        <div class="tswitch-show" id="tbs" style="opacity: 0;position: absolute;">
+                            <span class="material-icons" style="color: #606060; font-size: 22px;margin-right: 4px;">sort</span>
+                            <a style="color: #606060;font-size: 17px;font-weight: 500;">顺序</a>
+                        </div>
                     </div>
-                </label>
-                <label>
-                    <div id="tag-search">
-                        <input id="tsinput" type="text" placeholder="" onkeypress="if (event.keyCode == 13) {search_bar_search();}">
-                        <button type="button" id="tag-search-button" onclick="search_bar_search()">
-                            <span class="material-icons" style="color: rgb(96, 96, 96);">search</span>
-                        </button>
-                    </div>
-                </label>
-            </div>
+                    <span class="material-icons" style="color: #606060;margin-left: 2px;">sort</span>
+                </div>
+            </label>
+            <label>
+                <div id="tag-search">
+                    <input id="tsinput" type="text" placeholder="" onkeypress="if (event.keyCode == 13) {search_bar_search();}">
+                    <button type="button" id="tag-search-button" onclick="search_bar_search()">
+                        <span class="material-icons" style="color: rgb(96, 96, 96);">search</span>
+                    </button>
+                </div>
+            </label>
         </div>
-        <div class="botton">
-            <div class="sidebar"></div>
-            <div id="result">
-                
+    </div>
+    <div class="botton">
+        <div class="sidebar"></div>
+        <div id="result">
+            <div id="welcome">
+                <div id="welcome-logo">
+                    <a style="font-family: MiSans; color:#25B449 ;font-weight: 900;font-size: 100px;margin-right: 50px;">MACDB</a>
+                    <svg style="margin-left: auto" width="10.000000" height="110.000000" viewBox="0 0 10 110" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs/>
+                        <line id="直线 1" x1="5.000000" y1="5.000000" x2="5.000000" y2="105.000000" stroke="#000000" stroke-opacity="1.000000" stroke-width="5.000000"/>
+                    </svg>
+                    <div style="margin-left: 20px;">
+                        <div style="display: flex; align-items: center;" onclick="window.open('https://github.com/D4box/MACDB')">
+                            <svg height="50" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="50" data-view-component="true" class="octicon octicon-mark-github v-align-middle color-fg-default">
+                                <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path>
+                            </svg>
+                            <a style="font-family: MiSans; font-weight: 900; font-size: 50px;margin-left: 10PX;">GitHub</a>
+                        </div>
+                        <div style="color:#20b0e3;display: flex; align-items: center;" onclick="window.open('https://space.bilibili.com/13201756')">
+                            <svg t="1728066987494" class="icon" viewBox="0 0 1129 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2838" width="50" height="50"><path d="M234.908525 9.656195a80.468288 80.468288 0 0 1 68.398044 0 167.374038 167.374038 0 0 1 41.84351 30.577949l160.936576 140.819503H621.156306L782.092881 40.234144a168.983404 168.983404 0 0 1 41.84351-30.577949 80.468288 80.468288 0 0 1 107.022823 66.788678 80.468288 80.468288 0 0 1-17.703024 53.913753 449.817728 449.817728 0 0 1-35.406046 32.187315 232.553351 232.553351 0 0 1-22.531121 18.507706h100.58536a170.59277 170.59277 0 0 1 118.288383 53.10907A171.397453 171.397453 0 0 1 1128.106519 352.4511v462.692655a325.896565 325.896565 0 0 1-4.023415 70.00741 178.639599 178.639599 0 0 1-80.468288 112.655603 173.006819 173.006819 0 0 1-92.53853 25.749852H212.377404a341.18554 341.18554 0 0 1-72.421459-4.023415 177.834916 177.834916 0 0 1-111.046237-80.468287A172.202136 172.202136 0 0 1 1.550491 846.526387V388.66183A360.497929 360.497929 0 0 1 1.550491 321.873151a177.030233 177.030233 0 0 1 160.936575-143.233552h105.413457c-16.89834-12.070243-31.382632-26.554535-46.671607-39.429461a80.468288 80.468288 0 0 1-25.749852-65.983996A80.468288 80.468288 0 0 1 234.908525 9.656195M216.400819 321.873151a80.468288 80.468288 0 0 0-63.569948 57.937167 108.632188 108.632188 0 0 0 0 30.577949v380.615001a80.468288 80.468288 0 0 0 55.523119 80.468288 106.21814 106.21814 0 0 0 34.601364 5.63278h654.207179a80.468288 80.468288 0 0 0 76.444873-47.47629 112.655603 112.655603 0 0 0 8.046829-53.10907v-354.060465a135.186723 135.186723 0 0 0 0-38.624779 80.468288 80.468288 0 0 0-52.304387-54.718435 129.553943 129.553943 0 0 0-49.890338-7.242146H254.220914a268.764081 268.764081 0 0 0-37.820095 0z m0 0" fill="#20B0E3" p-id="2839" data-spm-anchor-id="a313x.search_index.0.i14.69403a81I4EGkk" class="selected"></path><path d="M348.368811 447.40368a80.468288 80.468288 0 0 1 55.523118 18.507706 80.468288 80.468288 0 0 1 28.163901 59.546533v80.468287a80.468288 80.468288 0 0 1-16.093658 51.499705 80.468288 80.468288 0 0 1-131.967992-9.656195 104.608774 104.608774 0 0 1-10.460877-54.718436v-80.468287a80.468288 80.468288 0 0 1 70.00741-67.593362z m416.021047 0a80.468288 80.468288 0 0 1 86.101068 75.64019v80.468288a94.147897 94.147897 0 0 1-12.070243 53.10907 80.468288 80.468288 0 0 1-132.772675 0 95.757262 95.757262 0 0 1-12.874926-57.132485v-80.468287a80.468288 80.468288 0 0 1 70.00741-70.812093z m0 0" fill="#20B0E3" p-id="2840" data-spm-anchor-id="a313x.search_index.0.i15.69403a81I4EGkk" class="selected"></path></svg>
+                            <a style="font-family: MiSans; font-weight: 900; font-size: 50px;margin-left: 10PX;">B站</a>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 50;font-family: MiSans;font-size: 25px">
+                    <span>
+                        模仿<a style="color: #4d94ff;" href="https://www.animecharactersdatabase.com">ACDB</a>制作的动漫人物搜索网站，因为ACDB基本上没有收录多少中文圈的动漫角色，搜不到中文圈的角色，所以制作了MACDB(暂名)，数据来源于<a style="color:#25B449" href="https://moegirl.org">Moegirl萌娘百科</a></a>
+                    </span><br>
+                    <div style="margin-top: 40px;font-size: 22px;">
+                        <a style="font-size: 35px;font-weight: 1000;">用前提示</a><br>
+                        <div style="margin-top: 10px;">
+                            如果是表情包的话建议先到<a style="color: #4d94ff;" href="https://image.baidu.com/">百度搜图</a>或者<a style="color: #4d94ff;" href="https://google.com">谷歌搜图</a>之类的网站工具搜一下图，一般都会找到；番剧中的图片可以到<a style="color: #4d94ff;" href="https://trace.moe/">trace.moe</a>搜索；一般美图可以到<a style="color: #4d94ff;" href="https://saucenao.com/">SauceNAO</a>搜索；本子可以到<a style="color: #4d94ff;" href="https://ascii2d.net/">ascii2d</a>搜索
+                        </div>
+                        <div style="margin-top: 15px;">
+                            实在搜不到的情况下这个网站才是最终手段
+                        </div>
+                    </div>
+                    <div style="margin-top: 40px;font-size: 22px;">
+                        <a style="font-size: 35px;font-weight: 1000;">使用方法</a><br>
+                        <div style="margin-top: 10px;">
+                            观察你需要搜索的人物的特征，在侧边栏选择对应的特征标签
+                            <br>
+                            也可以使用上方搜索框输入公式获得更精确的搜索结果(用"&"代表交集，"|"代表并集)
+                        </div>
+                        <div style="margin-top: 15px;">
+                            搜索栏左侧的开关可切换结果排列方式为随机或按首字母排序
+                            <br>
+                            点击重置按钮可清空已选标签
+                        </div>
+                        <div style="margin-top: 15px;">
+                            在结果列表中点击结果的空白处可以显示对应结果的预览图片
+                        </div>
+                        <div style="margin-top: 15px;"></div>
+                            建议搭配油猴插件<a style="color: #4d94ff;" href="https://greasyfork.org/zh-CN/scripts/24204-picviewer-ce">Picviewer CE+</a>使用
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
