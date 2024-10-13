@@ -4,7 +4,7 @@ test.py
 /tag/
 /unget/
 /HTML/
-/macdb-backend/
+/backendtools/gettag/
 /backendtools/testapi/__pycache__/
 backendtools/testapi/__pycache__/api.cpython-311.pyc
 /.vscode/
