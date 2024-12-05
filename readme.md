@@ -8,19 +8,9 @@
 ## 使用方法
 ### 用前提示
 > [!NOTE]
-> 如果是表情包的话建议先到[百度搜图](https://image.baidu.com/)或者[谷歌搜图](https://google.com)之类的网站工具搜一下图，一般都会找到；番剧中的图片可以到[trace.moe](https://trace.moe/)搜索；一般美图可以到[SauceNAO](https://saucenao.com/)搜索；本子可以到[ascii2d](https://ascii2d.net/)搜索
-> 
-> 实在搜不到的情况下这个网站才是最终手段
+> 如果是表情包的话建议先用[百度搜图](https://image.baidu.com/)或者[谷歌搜图](https://google.com)之类的网站工具搜一下图，一般都会找到；番剧中的图片可以用[trace.moe](https://trace.moe/)搜索；一般美图可以用[SauceNAO](https://saucenao.com/)搜索；本子可以用[ascii2d](https://ascii2d.net/)搜索
 ### 开始使用
-观察你需要搜索的人物的特征，在侧边栏选择对应的特征标签
-也可以使用上方搜索框输入公式获得更精确的搜索结果(用"&"代表交集，"|"代表并集)
-
-搜索栏左侧的开关可切换结果排列方式为随机或按首字母排序
-点击重置按钮可清空已选标签
-
-在结果列表中点击结果的空白处可以显示对应结果的预览图片
-
-建议搭配油猴插件[Picviewer CE+](https://greasyfork.org/zh-CN/scripts/24204-picviewer-ce)使用
+见网站
 
 ---
 ### Q&A

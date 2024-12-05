@@ -1,3 +1,8 @@
 {
-    "livePreview.defaultPreviewPath": "/web/main/index.html"
+    "livePreview.defaultPreviewPath": "/index.html",
+    "wrangler.compver": 2,
+    "wrangler.enabled": true,
+    "liveServer.settings.multiRootWorkspaceName": "MACDB",
+    "livePreview.serverRoot": "/web/main",
+    "liveServer.settings.root": "/web/main"
 }
